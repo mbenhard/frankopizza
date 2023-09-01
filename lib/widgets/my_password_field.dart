@@ -1,23 +1,27 @@
 import 'package:flutter/material.dart';
+
 import '../constants.dart';
 
 class MyPasswordField extends StatelessWidget {
-  const MyPasswordField({
-    Key? key,
-    required this.isPasswordVisible,
-    required this.onTap,
-    required this.text,
-  }) : super(key: key);
+  const MyPasswordField(
+      {Key? key,
+      required this.isPasswordVisible,
+      required this.onTap,
+      required this.text,
+      this.textEditingController})
+      : super(key: key);
 
   final bool isPasswordVisible;
   final VoidCallback onTap;
   final String text;
+  final TextEditingController? textEditingController;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 5),
       child: TextField(
+        controller: textEditingController,
         style: kBodyText.copyWith(
           color: Colors.black,
         ),

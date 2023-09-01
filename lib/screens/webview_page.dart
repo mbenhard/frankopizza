@@ -1,7 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg_provider/flutter_svg_provider.dart';
-import '../widgets/widget.dart';
-import '../constants.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 
 class webviewPage extends StatefulWidget {

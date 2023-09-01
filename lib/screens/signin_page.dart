@@ -1,8 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:flutter_svg_provider/flutter_svg_provider.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+
 import '../constants.dart';
 import '../screens/screen.dart';
-import 'package:flutter_svg_provider/flutter_svg_provider.dart';
 import '../widgets/widget.dart';
 
 class SignInPage extends StatefulWidget {
@@ -37,6 +41,34 @@ List<String> remamber = <String>[
 
 class _SignInPageState extends State<SignInPage> {
   bool isPasswordVisible = true;
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+
+  final GlobalKey webViewKey = GlobalKey();
+  bool isLoggedIn = false;
+  InAppWebViewController? webViewController;
+  InAppWebViewGroupOptions options = InAppWebViewGroupOptions(
+      crossPlatform: InAppWebViewOptions(
+        useShouldOverrideUrlLoading: true,
+        mediaPlaybackRequiresUserGesture: false,
+      ),
+      android: AndroidInAppWebViewOptions(
+        useHybridComposition: true,
+      ),
+      ios: IOSInAppWebViewOptions(
+        allowsInlineMediaPlayback: true,
+      ));
+  _login() {
+    EasyLoading.show();
+    final String username = emailController.text;
+    final String password = passwordController.text;
+    webViewController?.evaluateJavascript(source: '''
+      document.getElementById('username').value = '$username';
+   document.getElementById('password').value = '$password';
+   document.getElementsByClassName('woocommerce-button button woocommerce-form-login__submit wp-element-button')[0].click();
+''');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -56,130 +88,178 @@ class _SignInPageState extends State<SignInPage> {
       ),
       body: SafeArea(
         //to make page scrollable
-        child: CustomScrollView(
-          reverse: true,
-          slivers: [
-            SliverFillRemaining(
-              hasScrollBody: false,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Flexible(
-                      fit: FlexFit.loose,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Flexible(
+                  fit: FlexFit.loose,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(
+                        height: 140,
+                      ),
+                      Center(
+                        child: Text(
+                          welcome[widget.v],
+                          style: kHeadline,
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      SizedBox(
+                        height: 30,
+                      ),
+                      MyTextField(
+                        hintText: 'Email ',
+                        inputType: TextInputType.text,
+                        textEditingController: emailController,
+                      ),
+                      MyPasswordField(
+                        textEditingController: passwordController,
+                        isPasswordVisible: isPasswordVisible,
+                        text: pass[widget.v],
+                        onTap: () {
+                          setState(() {
+                            isPasswordVisible = !isPasswordVisible;
+                          });
+                        },
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          SizedBox(
-                            height: 140,
-                          ),
-                          Center(
-                            child: Text(
-                              welcome[widget.v],
-                              style: kHeadline,
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                          SizedBox(
-                            height: 30,
-                          ),
-                          MyTextField(
-                            hintText: 'Email ',
-                            inputType: TextInputType.text,
-                          ),
-                          MyPasswordField(
-                            isPasswordVisible: isPasswordVisible,
-                            text: pass[widget.v],
+                          GestureDetector(
                             onTap: () {
-                              setState(() {
-                                isPasswordVisible = !isPasswordVisible;
-                              });
-                            },
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              GestureDetector(
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    CupertinoPageRoute(
-                                      builder: (context) => forgetpasswordPage(
-                                        v: widget.v,
-                                      ),
-                                    ),
-                                  );
-                                },
-                                child: Text(
-                                  forget[widget.v],
-                                  style: kBodyText.copyWith(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
+                              Navigator.push(
+                                context,
+                                CupertinoPageRoute(
+                                  builder: (context) => forgetpasswordPage(
+                                    v: widget.v,
                                   ),
                                 ),
+                              );
+                            },
+                            child: Text(
+                              forget[widget.v],
+                              style: kBodyText.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
                               ),
-                              const SizedBox(
-                                height: 65,
-                              ),
-                            ],
+                            ),
+                          ),
+                          const SizedBox(
+                            height: 65,
                           ),
                         ],
                       ),
+                    ],
+                  ),
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                ),
+                MyTextButton(
+                  buttonName: signin[widget.v],
+                  onTap: _login,
+                  bgColor: Color(0xFF33481C),
+                  textColor: Colors.white,
+                ),
+                const SizedBox(
+                  height: 10,
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      remamber[widget.v],
+                      style: kBodyText1,
                     ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                    ),
-                    MyTextButton(
-                      buttonName: signin[widget.v],
+                    GestureDetector(
                       onTap: () {
                         Navigator.push(
                           context,
                           CupertinoPageRoute(
-                            builder: (context) => webviewPage(),
+                            builder: (context) => RegisterPage(v: widget.v),
                           ),
                         );
                       },
-                      bgColor: Color(0xFF33481C),
-                      textColor: Colors.white,
+                      child: Text(
+                        signup[widget.v],
+                        style: kBodyText.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                     const SizedBox(
-                      height: 10,
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          remamber[widget.v],
-                          style: kBodyText1,
-                        ),
-                        GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              CupertinoPageRoute(
-                                builder: (context) => RegisterPage(v: widget.v),
-                              ),
-                            );
-                          },
-                          child: Text(
-                            signup[widget.v],
-                            style: kBodyText.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(
-                          height: 65,
-                        ),
-                      ],
+                      height: 65,
                     ),
                   ],
                 ),
-              ),
+                Container(
+                  height: 0,
+                  child: InAppWebView(
+                    key: webViewKey,
+                    initialUrlRequest: URLRequest(
+                        url:
+                            Uri.parse("https://www.franko-pizza.sk/moj-ucet/")),
+                    initialOptions: options,
+                    onWebViewCreated: (controller) {
+                      webViewController = controller;
+                      CookieManager.instance().deleteAllCookies();
+                    },
+                    onLoadStart: (controller, url) {
+                      EasyLoading.show();
+                    },
+                    onLoadStop: (controller, url) async {
+                      CookieManager.instance()
+                          .getCookies(
+                        url: Uri.parse('https://www.franko-pizza.sk/moj-ucet/'),
+                      )
+                          .then((value) {
+                        print('coooooookies : ${value.toString()}');
+                        EasyLoading.dismiss();
+                        if (emailController.text.isNotEmpty &&
+                            value.toString().contains(emailController.text)) {
+                          Navigator.push(
+                            context,
+                            CupertinoPageRoute(
+                              builder: (context) => webviewPage(),
+                            ),
+                          );
+                          print('logged id successfull');
+                        } else if (emailController.text.isNotEmpty &&
+                            !value.toString().contains(emailController.text)) {
+                          Fluttertoast.showToast(
+                            msg: "Login failed!",
+                            toastLength: Toast.LENGTH_SHORT,
+                            gravity: ToastGravity
+                                .BOTTOM, // You can change the gravity
+                            timeInSecForIosWeb:
+                                1, // Duration for which the toast should be visible
+                            backgroundColor: Colors.red,
+                            textColor: Colors.white,
+                            fontSize: 16.0,
+                          );
+                        }
+                      });
+                    },
+                    androidOnPermissionRequest:
+                        (controller, origin, resources) async {
+                      return PermissionRequestResponse(
+                          resources: resources,
+                          action: PermissionRequestResponseAction.GRANT);
+                    },
+                    onConsoleMessage: (controller, consoleMessage) {
+                      print(consoleMessage);
+                    },
+                  ),
+                )
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
