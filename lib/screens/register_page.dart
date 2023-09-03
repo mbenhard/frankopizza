@@ -1,9 +1,12 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_svg_provider/flutter_svg_provider.dart';
-import '../widgets/widget.dart';
-import '../screens/screen.dart';
-import '../constants.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:flutter_svg_provider/flutter_svg_provider.dart';
+
+import '../constants.dart';
+import '../screens/screen.dart';
+import '../widgets/widget.dart';
 
 class RegisterPage extends StatefulWidget {
   final int v;
@@ -25,6 +28,48 @@ List<String> al = <String>[
 
 class _RegisterPageState extends State<RegisterPage> {
   bool passwordVisibility = true;
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController fullNameController = TextEditingController();
+
+  final GlobalKey webViewKey = GlobalKey();
+  bool isLoggedIn = false;
+  InAppWebViewController? webViewController;
+  InAppWebViewGroupOptions options = InAppWebViewGroupOptions(
+      crossPlatform: InAppWebViewOptions(
+        useShouldOverrideUrlLoading: true,
+        mediaPlaybackRequiresUserGesture: false,
+      ),
+      android: AndroidInAppWebViewOptions(
+        useHybridComposition: true,
+      ),
+      ios: IOSInAppWebViewOptions(
+        allowsInlineMediaPlayback: true,
+      ));
+  _register() {
+    final String email = emailController.text;
+    final String password = passwordController.text;
+    final String fullName = fullNameController.text;
+    if (email.isNotEmpty && password.isNotEmpty && fullName.isNotEmpty) {
+      EasyLoading.show();
+      print('okkokkokkoko');
+      webViewController?.evaluateJavascript(source: '''
+      document.getElementById('reg_username').value = '$fullName';
+   document.getElementById('reg_email').value = '$email';
+   document.getElementById('reg_password').value = '$password';
+   document.getElementsByClassName('woocommerce-Button woocommerce-button button wp-element-button woocommerce-form-register__submit')[0].click();
+''');
+    }
+  }
+
+  @override
+  void initState() {
+    print('ggggggg=========');
+    CookieManager.instance()
+        .deleteCookies(url: Uri.parse("https://www.franko-pizza.sk/moj-ucet/"));
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -73,18 +118,21 @@ class _RegisterPageState extends State<RegisterPage> {
                           MyTextField(
                             hintText: name[widget.v],
                             inputType: TextInputType.name,
+                            textEditingController: fullNameController,
                           ),
                           MyTextField(
                             hintText: 'Email',
                             inputType: TextInputType.emailAddress,
+                            textEditingController: emailController,
                           ),
-                          MyTextField(
+                          /*MyTextField(
                             hintText: phone[widget.v],
                             inputType: TextInputType.phone,
-                          ),
+                          ),*/
                           MyPasswordField(
                             text: pass[widget.v],
                             isPasswordVisible: passwordVisibility,
+                            textEditingController: passwordController,
                             onTap: () {
                               setState(() {
                                 passwordVisibility = !passwordVisibility;
@@ -99,14 +147,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                     MyTextButton(
                       buttonName: register[widget.v],
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          CupertinoPageRoute(
-                            builder: (context) => webviewPage(),
-                          ),
-                        );
-                      },
+                      onTap: _register,
                       bgColor: Color(0xFF33481C),
                       textColor: Colors.white,
                     ),
@@ -142,6 +183,46 @@ class _RegisterPageState extends State<RegisterPage> {
                         ),
                       ],
                     ),
+                    Container(
+                      height: 1000,
+                      child: InAppWebView(
+                        key: webViewKey,
+                        initialUrlRequest: URLRequest(
+                            url: Uri.parse(
+                                "https://www.franko-pizza.sk/moj-ucet/")),
+                        initialOptions: options,
+                        onWebViewCreated: (controller) {
+                          webViewController = controller;
+                        },
+                        onLoadStart: (controller, url) {
+                          print('0666006600606060');
+                          EasyLoading.show();
+                        },
+                        onLoadError: (controller, url, txt, kk) {
+                          print('0707070707070707');
+                          EasyLoading.dismiss();
+                        },
+                        onLoadStop: (controller, url) async {
+                          EasyLoading.dismiss();
+                          if (emailController.text.isNotEmpty &&
+                              fullNameController.text.isNotEmpty &&
+                              passwordController.text.isNotEmpty) {
+                            Navigator.push(
+                              context,
+                              CupertinoPageRoute(
+                                builder: (context) => SignInPage(
+                                  v: widget.v,
+                                ),
+                              ),
+                            );
+                          }
+                        },
+                        onConsoleMessage: (controller, consoleMessage) {
+                          print('8080808080808808');
+                          print(consoleMessage);
+                        },
+                      ),
+                    )
                   ],
                 ),
               ),
