@@ -59,14 +59,25 @@ class _SignInPageState extends State<SignInPage> {
         allowsInlineMediaPlayback: true,
       ));
   _login() {
-    EasyLoading.show();
     final String username = emailController.text;
     final String password = passwordController.text;
-    webViewController?.evaluateJavascript(source: '''
+    if (username.isNotEmpty && password.isNotEmpty) {
+      EasyLoading.show();
+      print('okkokkokkoko');
+      webViewController?.evaluateJavascript(source: '''
       document.getElementById('username').value = '$username';
    document.getElementById('password').value = '$password';
    document.getElementsByClassName('woocommerce-button button woocommerce-form-login__submit wp-element-button')[0].click();
 ''');
+    }
+  }
+
+  @override
+  void initState() {
+    print('ggggggg=========');
+    CookieManager.instance()
+        .deleteCookies(url: Uri.parse("https://www.franko-pizza.sk/moj-ucet/"));
+    super.initState();
   }
 
   @override
@@ -199,7 +210,7 @@ class _SignInPageState extends State<SignInPage> {
                   ],
                 ),
                 Container(
-                  height: 0,
+                  height: 1000,
                   child: InAppWebView(
                     key: webViewKey,
                     initialUrlRequest: URLRequest(
@@ -208,10 +219,14 @@ class _SignInPageState extends State<SignInPage> {
                     initialOptions: options,
                     onWebViewCreated: (controller) {
                       webViewController = controller;
-                      CookieManager.instance().deleteAllCookies();
                     },
                     onLoadStart: (controller, url) {
+                      print('0666006600606060');
                       EasyLoading.show();
+                    },
+                    onLoadError: (controller, url, txt, kk) {
+                      print('0707070707070707');
+                      EasyLoading.dismiss();
                     },
                     onLoadStop: (controller, url) async {
                       CookieManager.instance()
@@ -246,13 +261,8 @@ class _SignInPageState extends State<SignInPage> {
                         }
                       });
                     },
-                    androidOnPermissionRequest:
-                        (controller, origin, resources) async {
-                      return PermissionRequestResponse(
-                          resources: resources,
-                          action: PermissionRequestResponseAction.GRANT);
-                    },
                     onConsoleMessage: (controller, consoleMessage) {
+                      print('8080808080808808');
                       print(consoleMessage);
                     },
                   ),
