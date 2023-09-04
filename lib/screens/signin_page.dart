@@ -4,6 +4,7 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_svg_provider/flutter_svg_provider.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../constants.dart';
 import '../screens/screen.dart';
@@ -43,7 +44,6 @@ class _SignInPageState extends State<SignInPage> {
   bool isPasswordVisible = true;
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-
   final GlobalKey webViewKey = GlobalKey();
   bool isLoggedIn = false;
   InAppWebViewController? webViewController;
@@ -58,6 +58,11 @@ class _SignInPageState extends State<SignInPage> {
       ios: IOSInAppWebViewOptions(
         allowsInlineMediaPlayback: true,
       ));
+  Future<void> setUserName(String username) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setString('username', username);
+  }
+
   _login() {
     final String username = emailController.text;
     final String password = passwordController.text;
@@ -73,14 +78,6 @@ class _SignInPageState extends State<SignInPage> {
   }
 
   @override
-  void initState() {
-    print('ggggggg=========');
-    CookieManager.instance()
-        .deleteCookies(url: Uri.parse("https://www.franko-pizza.sk/moj-ucet/"));
-    super.initState();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -90,7 +87,7 @@ class _SignInPageState extends State<SignInPage> {
           onPressed: () {
             Navigator.pop(context);
           },
-          icon: Image(
+          icon: const Image(
             width: 24,
             color: Colors.white,
             image: Svg('assets/images/back_arrow.svg'),
@@ -110,7 +107,7 @@ class _SignInPageState extends State<SignInPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      SizedBox(
+                      const SizedBox(
                         height: 140,
                       ),
                       Center(
@@ -120,7 +117,7 @@ class _SignInPageState extends State<SignInPage> {
                           textAlign: TextAlign.center,
                         ),
                       ),
-                      SizedBox(
+                      const SizedBox(
                         height: 30,
                       ),
                       MyTextField(
@@ -168,13 +165,13 @@ class _SignInPageState extends State<SignInPage> {
                     ],
                   ),
                 ),
-                Row(
+                const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                 ),
                 MyTextButton(
                   buttonName: signin[widget.v],
                   onTap: _login,
-                  bgColor: Color(0xFF33481C),
+                  bgColor: const Color(0xFF33481C),
                   textColor: Colors.white,
                 ),
                 const SizedBox(
@@ -209,13 +206,13 @@ class _SignInPageState extends State<SignInPage> {
                     ),
                   ],
                 ),
-                Container(
-                  height: 1000,
+                SizedBox(
+                  height: 0,
                   child: InAppWebView(
                     key: webViewKey,
                     initialUrlRequest: URLRequest(
-                        url:
-                            Uri.parse("https://www.franko-pizza.sk/moj-ucet/")),
+                      url: Uri.parse("https://www.franko-pizza.sk/moj-ucet/"),
+                    ),
                     initialOptions: options,
                     onWebViewCreated: (controller) {
                       webViewController = controller;
@@ -231,20 +228,22 @@ class _SignInPageState extends State<SignInPage> {
                     onLoadStop: (controller, url) async {
                       CookieManager.instance()
                           .getCookies(
-                        url: Uri.parse('https://www.franko-pizza.sk/moj-ucet/'),
+                        url: Uri.parse('https://www.franko-pizza.sk'),
                       )
                           .then((value) {
                         print('coooooookies : ${value.toString()}');
                         EasyLoading.dismiss();
                         if (emailController.text.isNotEmpty &&
                             value.toString().contains(emailController.text)) {
-                          Navigator.push(
-                            context,
-                            CupertinoPageRoute(
-                              builder: (context) => webviewPage(),
-                            ),
-                          );
-                          print('logged id successfull');
+                          setUserName(emailController.text).then((value) {
+                            Navigator.push(
+                              context,
+                              CupertinoPageRoute(
+                                builder: (context) => webviewPage(),
+                              ),
+                            );
+                            print('logged id successfull');
+                          });
                         } else if (emailController.text.isNotEmpty &&
                             !value.toString().contains(emailController.text)) {
                           Fluttertoast.showToast(
