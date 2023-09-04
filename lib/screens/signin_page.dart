@@ -67,7 +67,6 @@ class _SignInPageState extends State<SignInPage> {
     final String username = emailController.text;
     final String password = passwordController.text;
     if (username.isNotEmpty && password.isNotEmpty) {
-      EasyLoading.show();
       print('okkokkokkoko');
       webViewController?.evaluateJavascript(source: '''
       document.getElementById('username').value = '$username';
