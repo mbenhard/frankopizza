@@ -1,6 +1,9 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:franko/screens/screen.dart';
 
 class driverwebPage extends StatefulWidget {
   driverwebPage({super.key});
@@ -15,8 +18,43 @@ double _progress = 0;
 late InAppWebViewController inAppWebViewController;
 late InAppWebViewController inAppWebViewController1;
 late InAppWebViewController inAppWebViewController2;
+final GlobalKey webViewKey = GlobalKey();
+InAppWebViewGroupOptions options = InAppWebViewGroupOptions(
+    crossPlatform: InAppWebViewOptions(
+      useShouldOverrideUrlLoading: true,
+      mediaPlaybackRequiresUserGesture: false,
+    ),
+    android: AndroidInAppWebViewOptions(
+      useHybridComposition: true,
+    ),
+    ios: IOSInAppWebViewOptions(
+      allowsInlineMediaPlayback: true,
+    ));
+Future<String> getUserName() async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  return prefs.getString('username') ?? '';
+}
+
+Future<void> removeUserName() async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  prefs.setString('username', '');
+}
+
+String _username = '';
 
 class _driverwebPageState extends State<driverwebPage> {
+  bool passwordVisibility = true;
+
+  @override
+  void initState() {
+    getUserName().then((value) {
+      _username = value;
+      print(_username);
+    });
+
+    super.initState();
+  }
+
   int _selectedIndex = 0;
 
   static final List<Widget> _widgetOptions = <Widget>[
@@ -45,12 +83,48 @@ class _driverwebPageState extends State<driverwebPage> {
     }),
     Builder(builder: (context) {
       return InAppWebView(
+        key: webViewKey,
         initialUrlRequest:
             URLRequest(url: Uri.parse("https://www.franko-pizza.sk/moj-ucet/")),
-        onWebViewCreated: (InAppWebViewController controller) {
+        initialOptions: options,
+        onWebViewCreated: (controller) {
           inAppWebViewController2 = controller;
         },
-        onProgressChanged: (InAppWebViewController controller, int progress) {},
+        onLoadStart: (controller, url) {
+          EasyLoading.show();
+        },
+        onLoadError: (controller, url, txt, kk) {
+          EasyLoading.dismiss();
+        },
+        onLoadStop: (controller, url) async {
+          CookieManager.instance()
+              .getCookies(
+            url: Uri.parse('https://www.franko-pizza.sk'),
+          )
+              .then((value) async {
+            print('123456789');
+            print(_username.toString());
+            print('123456789');
+
+            if (!value.toString().contains(_username.toString())) {
+              removeUserName().then((value) {
+                Navigator.push(
+                  context,
+                  CupertinoPageRoute(
+                    builder: (context) => const SignInPage(
+                      v: 1,
+                    ),
+                  ),
+                );
+              });
+            }
+            EasyLoading.dismiss();
+          });
+        },
+        onConsoleMessage: (controller, consoleMessage) {
+          print('8080808080808808');
+          print(consoleMessage);
+        },
       );
     }),
   ];
