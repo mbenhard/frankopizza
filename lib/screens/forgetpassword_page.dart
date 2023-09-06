@@ -4,6 +4,9 @@ import '../constants.dart';
 import '../screens/screen.dart';
 import 'package:flutter_svg_provider/flutter_svg_provider.dart';
 import '../widgets/widget.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 class forgetpasswordPage extends StatefulWidget {
   final int v;
@@ -26,6 +29,34 @@ List<String> remember = <String>[
 
 class _forgetpasswordPageState extends State<forgetpasswordPage> {
   bool isPasswordVisible = true;
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+
+  final GlobalKey webViewKey = GlobalKey();
+  bool isLoggedIn = false;
+  InAppWebViewController? webViewController;
+  InAppWebViewGroupOptions options = InAppWebViewGroupOptions(
+      crossPlatform: InAppWebViewOptions(
+        useShouldOverrideUrlLoading: true,
+        mediaPlaybackRequiresUserGesture: false,
+      ),
+      android: AndroidInAppWebViewOptions(
+        useHybridComposition: true,
+      ),
+      ios: IOSInAppWebViewOptions(
+        allowsInlineMediaPlayback: true,
+      ));
+  _login() {
+    EasyLoading.show();
+    final String username = emailController.text;
+    final String password = passwordController.text;
+    webViewController?.evaluateJavascript(source: '''
+      document.getElementById('username').value = '$username';
+
+   document.getElementsByClassName('woocommerce-Input woocommerce-Input--text input-text')[0].click();
+''');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -84,6 +115,7 @@ class _forgetpasswordPageState extends State<forgetpasswordPage> {
                           MyTextField(
                             hintText: 'Email',
                             inputType: TextInputType.text,
+                            textEditingController: emailController,
                           ),
                         ],
                       ),
@@ -97,7 +129,7 @@ class _forgetpasswordPageState extends State<forgetpasswordPage> {
                         Navigator.push(
                           context,
                           CupertinoPageRoute(
-                            builder: (context) => webviewPage(),
+                            builder: (context) => webviewPassPage(),
                           ),
                         );
                       },
@@ -141,6 +173,70 @@ class _forgetpasswordPageState extends State<forgetpasswordPage> {
                     const SizedBox(
                       height: 10,
                     ),
+                    Container(
+                      height: 0,
+                      child: InAppWebView(
+                        key: webViewKey,
+                        initialUrlRequest: URLRequest(
+                            url: Uri.parse(
+                                "https://www.franko-pizza.sk/moj-ucet/lost-password/")),
+                        initialOptions: options,
+                        onWebViewCreated: (controller) {
+                          webViewController = controller;
+                          CookieManager.instance().deleteAllCookies();
+                        },
+                        onLoadStart: (controller, url) {
+                          EasyLoading.show();
+                        },
+                        onLoadStop: (controller, url) async {
+                          CookieManager.instance()
+                              .getCookies(
+                            url: Uri.parse(
+                                'https://www.franko-pizza.sk/moj-ucet/lost-password/'),
+                          )
+                              .then((value) {
+                            print('coooooookies : ${value.toString()}');
+                            EasyLoading.dismiss();
+                            if (emailController.text.isNotEmpty &&
+                                value
+                                    .toString()
+                                    .contains(emailController.text)) {
+                              Navigator.push(
+                                context,
+                                CupertinoPageRoute(
+                                  builder: (context) => webviewPassPage(),
+                                ),
+                              );
+                              print('logged id successfull');
+                            } else if (emailController.text.isNotEmpty &&
+                                !value
+                                    .toString()
+                                    .contains(emailController.text)) {
+                              Fluttertoast.showToast(
+                                msg: "Login failed!",
+                                toastLength: Toast.LENGTH_SHORT,
+                                gravity: ToastGravity
+                                    .BOTTOM, // You can change the gravity
+                                timeInSecForIosWeb:
+                                    1, // Duration for which the toast should be visible
+                                backgroundColor: Colors.red,
+                                textColor: Colors.white,
+                                fontSize: 16.0,
+                              );
+                            }
+                          });
+                        },
+                        androidOnPermissionRequest:
+                            (controller, origin, resources) async {
+                          return PermissionRequestResponse(
+                              resources: resources,
+                              action: PermissionRequestResponseAction.GRANT);
+                        },
+                        onConsoleMessage: (controller, consoleMessage) {
+                          print(consoleMessage);
+                        },
+                      ),
+                    )
                   ],
                 ),
               ),
