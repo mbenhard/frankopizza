@@ -36,6 +36,7 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     getUserName().then((value) {
+      print('salam');
       _username = value;
       print(_username);
     });
@@ -54,7 +55,7 @@ class _MyAppState extends State<MyApp> {
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: _username.isNotEmpty ? const webviewPage() : const SplashPage(),
+      home: _username.isEmpty ? const SplashPage() : const webviewPage(),
       builder: EasyLoading.init(),
     );
   }
