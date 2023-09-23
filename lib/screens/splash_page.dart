@@ -1,9 +1,10 @@
 import 'dart:async';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:franko/screens/screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'driver_page.dart';
+import 'language_page.dart';
 /*
 class SplashPage extends StatelessWidget {
   @override
@@ -42,9 +43,7 @@ class _SplashScreenState extends State<SplashPage> {
       _username = value;
       print(_username);
     });
-
-    super.initState();
-    Timer(
+    Future.delayed(
       const Duration(seconds: 2),
       () => Navigator.pushReplacement(
         context,
@@ -54,6 +53,7 @@ class _SplashScreenState extends State<SplashPage> {
         ),
       ),
     );
+    super.initState();
   }
 
   @override
