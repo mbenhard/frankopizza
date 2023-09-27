@@ -1,14 +1,18 @@
 import 'dart:io';
 
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:wp_notify/wp_notify.dart';
 
 import './screens/screen.dart';
 import 'config/custom_loading_animation.dart';
+import 'config/notification.dart';
 import 'constants.dart';
+import 'firebase_options.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,6 +20,13 @@ Future<void> main() async {
   if (Platform.isAndroid) {
     await AndroidInAppWebViewController.setWebContentsDebuggingEnabled(true);
   }
+
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+  WPNotifyAPI.instance.initWith(baseUrl: "https://www.franko-pizza.sk");
+  notification();
   configureGlobalLoader();
   runApp(MyApp());
 }
@@ -36,7 +47,6 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     getUserName().then((value) {
-      print('salam');
       _username = value;
       print(_username);
     });
@@ -55,7 +65,7 @@ class _MyAppState extends State<MyApp> {
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: _username.isEmpty ? const SplashPage() : driverwebPage(),
+      home: _username.isEmpty ? const SplashPage() : DriverWebPage(),
       builder: EasyLoading.init(),
     );
   }

@@ -5,6 +5,7 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_svg_provider/flutter_svg_provider.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:wp_notify/wp_notify.dart';
 
 import '../constants.dart';
 import '../screens/screen.dart';
@@ -44,9 +45,8 @@ class _SignInPageState extends State<SignInPage> {
   bool isPasswordVisible = true;
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final GlobalKey webViewKey = GlobalKey();
   bool isLoggedIn = false;
-  InAppWebViewController? webViewController;
+  HeadlessInAppWebView? headlessWebView;
   InAppWebViewGroupOptions options = InAppWebViewGroupOptions(
       crossPlatform: InAppWebViewOptions(
         useShouldOverrideUrlLoading: true,
@@ -58,22 +58,109 @@ class _SignInPageState extends State<SignInPage> {
       ios: IOSInAppWebViewOptions(
         allowsInlineMediaPlayback: true,
       ));
-  Future<void> setUserName(String username) async {
+  Future<void> setNotification(String username) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setString('username', username);
   }
 
+  Future<void> setWpConfig(String id) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    try {
+      WPNotifyAPI.instance.api((request) {
+        return request
+            .wpNotifyStoreToken(
+                token: prefs.getString('fcm')!, userId: int.tryParse(id))
+            .then((value) {
+          print(value.toJson());
+        });
+      });
+    } on Exception catch (e) {
+      print(e);
+    }
+  }
+
   _login() {
+    EasyLoading.show();
     final String username = emailController.text;
     final String password = passwordController.text;
     if (username.isNotEmpty && password.isNotEmpty) {
-      print('okkokkokkoko');
-      webViewController?.evaluateJavascript(source: '''
+      headlessWebView?.webViewController.evaluateJavascript(source: '''
       document.getElementById('username').value = '$username';
    document.getElementById('password').value = '$password';
    document.getElementsByClassName('woocommerce-button button woocommerce-form-login__submit wp-element-button')[0].click();
 ''');
     }
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    EasyLoading.show();
+    headlessWebView = HeadlessInAppWebView(
+      initialUrlRequest:
+          URLRequest(url: Uri.parse("https://www.franko-pizza.sk/moj-ucet/")),
+      onLoadStart: (controller, url) {
+        print('******************* on start loading ***************');
+      },
+      onLoadError: (controller, url, txt, kk) {
+        EasyLoading.dismiss();
+      },
+      onLoadStop: (controller, url) async {
+        print('******************* onLoadStop ***************');
+        CookieManager.instance()
+            .getCookies(
+          url: Uri.parse('https://www.franko-pizza.sk'),
+        )
+            .then((value) {
+          EasyLoading.dismiss();
+          if (emailController.text.isNotEmpty &&
+              value.toString().contains(emailController.text)) {
+            value.forEach((element) async {
+              if (element.name.contains('wp_wcpt_session')) {
+                String id = element.value
+                    .toString()
+                    .substring(0, element.value.toString().indexOf('%'));
+                setWpConfig(id);
+              }
+            });
+
+            setNotification(emailController.text).then((value) {
+              Navigator.push(
+                context,
+                CupertinoPageRoute(
+                  builder: (context) => DriverWebPage(),
+                ),
+              );
+              print('logged id successfull');
+            });
+          } else if (emailController.text.isNotEmpty &&
+              !value.toString().contains(emailController.text)) {
+            Fluttertoast.showToast(
+              msg: "Login failed!",
+              toastLength: Toast.LENGTH_SHORT,
+              gravity: ToastGravity.BOTTOM, // You can change the gravity
+              timeInSecForIosWeb:
+                  1, // Duration for which the toast should be visible
+              backgroundColor: Colors.red,
+              textColor: Colors.white,
+              fontSize: 16.0,
+            );
+          }
+        });
+      },
+      onConsoleMessage: (controller, consoleMessage) {
+        print('8080808080808808');
+        print(consoleMessage);
+      },
+    );
+    headlessWebView?.run();
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    headlessWebView?.dispose();
   }
 
   @override
@@ -84,7 +171,12 @@ class _SignInPageState extends State<SignInPage> {
         elevation: 0,
         leading: IconButton(
           onPressed: () {
-            Navigator.pop(context);
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => WelcomePage(v: widget.v),
+              ),
+            );
           },
           icon: const Image(
             width: 24,
@@ -205,10 +297,9 @@ class _SignInPageState extends State<SignInPage> {
                     ),
                   ],
                 ),
-                SizedBox(
+                /*SizedBox(
                   height: 0,
                   child: InAppWebView(
-                    key: webViewKey,
                     initialUrlRequest: URLRequest(
                       url: Uri.parse("https://www.franko-pizza.sk/moj-ucet/"),
                     ),
@@ -217,28 +308,35 @@ class _SignInPageState extends State<SignInPage> {
                       webViewController = controller;
                     },
                     onLoadStart: (controller, url) {
-                      print('0666006600606060');
-                      EasyLoading.show();
+                      print(
+                          '******************* on start loading ***************');
                     },
                     onLoadError: (controller, url, txt, kk) {
-                      print('0707070707070707');
                       EasyLoading.dismiss();
                     },
                     onLoadStop: (controller, url) async {
+                      print('******************* onLoadStop ***************');
                       CookieManager.instance()
                           .getCookies(
                         url: Uri.parse('https://www.franko-pizza.sk'),
                       )
                           .then((value) {
-                        print('coooooookies : ${value.toString()}');
                         EasyLoading.dismiss();
                         if (emailController.text.isNotEmpty &&
                             value.toString().contains(emailController.text)) {
-                          setUserName(emailController.text).then((value) {
+                          value.forEach((element) async {
+                            if (element.name.contains('wp_wcpt_session')) {
+                              String id = element.value.toString().substring(
+                                  0, element.value.toString().indexOf('%'));
+                              setWpConfig(id);
+                            }
+                          });
+
+                          setNotification(emailController.text).then((value) {
                             Navigator.push(
                               context,
                               CupertinoPageRoute(
-                                builder: (context) => driverwebPage(),
+                                builder: (context) => DriverWebPage(),
                               ),
                             );
                             print('logged id successfull');
@@ -264,7 +362,7 @@ class _SignInPageState extends State<SignInPage> {
                       print(consoleMessage);
                     },
                   ),
-                )
+                )*/
               ],
             ),
           ),

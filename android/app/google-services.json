@@ -1,0 +1,118 @@
+{
+  "project_info": {
+    "project_number": "325974658415",
+    "project_id": "franko-pizza",
+    "storage_bucket": "franko-pizza.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:325974658415:android:a1a8168166b6d96297ac9a",
+        "android_client_info": {
+          "package_name": "com.benhard.frankopizza"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "325974658415-d312mo6ls5cjuve3b4o3oo2pl83tcrh9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB5uK09HZED1EkqbCom9dIvyHTRaZ_gW9s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "325974658415-d312mo6ls5cjuve3b4o3oo2pl83tcrh9.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "325974658415-llf77k1liiaj4hclgoecjfrquk7nes7k.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.benhard.frankopizzadelivery"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:325974658415:android:610cd0451399619b97ac9a",
+        "android_client_info": {
+          "package_name": "com.benhard.frankopizzadelivery"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "325974658415-d312mo6ls5cjuve3b4o3oo2pl83tcrh9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB5uK09HZED1EkqbCom9dIvyHTRaZ_gW9s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "325974658415-d312mo6ls5cjuve3b4o3oo2pl83tcrh9.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "325974658415-llf77k1liiaj4hclgoecjfrquk7nes7k.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.benhard.frankopizzadelivery"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:325974658415:android:5918b7ca9589f83a97ac9a",
+        "android_client_info": {
+          "package_name": "com.example.franko"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "325974658415-d312mo6ls5cjuve3b4o3oo2pl83tcrh9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB5uK09HZED1EkqbCom9dIvyHTRaZ_gW9s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "325974658415-d312mo6ls5cjuve3b4o3oo2pl83tcrh9.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "325974658415-llf77k1liiaj4hclgoecjfrquk7nes7k.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.benhard.frankopizzadelivery"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
