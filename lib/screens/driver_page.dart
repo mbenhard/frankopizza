@@ -4,6 +4,8 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:franko/screens/signin_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../module/cookies.dart';
+
 class DriverWebPage extends StatefulWidget {
   DriverWebPage({super.key});
   @override
@@ -15,16 +17,19 @@ class _driverwebPageState extends State<DriverWebPage> {
   late InAppWebViewController inAppWebViewController1;
   late InAppWebViewController inAppWebViewController2;
   InAppWebViewGroupOptions options = InAppWebViewGroupOptions(
-      crossPlatform: InAppWebViewOptions(
-        useShouldOverrideUrlLoading: true,
-        mediaPlaybackRequiresUserGesture: false,
-      ),
-      android: AndroidInAppWebViewOptions(
-        useHybridComposition: true,
-      ),
-      ios: IOSInAppWebViewOptions(
-        allowsInlineMediaPlayback: true,
-      ));
+    crossPlatform: InAppWebViewOptions(
+      useShouldOverrideUrlLoading: true,
+      mediaPlaybackRequiresUserGesture: false,
+      cacheEnabled: true,
+    ),
+    android: AndroidInAppWebViewOptions(
+      useHybridComposition: true,
+    ),
+    ios: IOSInAppWebViewOptions(
+      allowsInlineMediaPlayback: true,
+      sharedCookiesEnabled: true,
+    ),
+  );
   Future<String> getUserName() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getString('username') ?? '';
@@ -54,38 +59,88 @@ class _driverwebPageState extends State<DriverWebPage> {
 
     _pages = [
       InAppWebView(
-        initialUrlRequest:
-            URLRequest(url: Uri.parse("https://franko-pizza.sk/mobile")),
-        onWebViewCreated: (InAppWebViewController controller) {
+        initialUrlRequest: URLRequest(
+          url: Uri.parse("https://franko-pizza.sk/mobile"),
+        ),
+        onWebViewCreated: (InAppWebViewController controller) async {
           inAppWebViewController = controller;
         },
+        /*onLoadStart: (controller, url) async {
+          await controller.evaluateJavascript(source: """
+              var style = document.createElement('style');
+              style.innerHTML = ".qodef-mobile-header {
+                      display: none !important;
+               }
+              .qodef-page-footer.qodef-split-footer {
+                  display: none !important;
+              }";
+              document.head.appendChild(style);
+            """);
+        },*/
+        /*onPageCommitVisible: ,*/
+        initialOptions: options,
         onLoadStop: (controller, url) async {
+          await controller.injectCSSCode(
+              source:
+                  '.qodef-mobile-header {display: none;} .qodef-page-footer.qodef-split-footer {display: none;}');
           setState(() {
             isLoading1 = false;
           });
         },
-        onProgressChanged: (InAppWebViewController controller, int progress) {},
+        onConsoleMessage: (controller, consoleMessage) {
+          print('111111111111111111111');
+          print(consoleMessage.message);
+        },
       ),
       InAppWebView(
         initialUrlRequest:
             URLRequest(url: Uri.parse("https://www.franko-pizza.sk/cart/")),
-        onWebViewCreated: (InAppWebViewController controller) {
+        onWebViewCreated: (InAppWebViewController controller) async {
           inAppWebViewController1 = controller;
         },
+        initialOptions: options,
         onLoadStop: (controller, url) async {
+          await controller.injectCSSCode(
+              source:
+                  '.qodef-mobile-header {display: none;} .qodef-page-footer.qodef-split-footer {display: none;} .woocommerce-orders-table tr td:first-child {display: none;}.woocommerce-orders-table__header.woocommerce-orders-table__header-order-number {display: none;}');
+          /*await controller.evaluateJavascript(source: """
+              var style = document.createElement('style');
+              style.innerHTML = ".qodef-mobile-header {
+                      display: none !important;
+               }
+              .qodef-page-footer .qodef-split-footer {
+                  display: none !important;
+              }";
+              document.head.appendChild(style);
+            """);*/
           setState(() {
             isLoading2 = false;
           });
         },
-        onProgressChanged: (InAppWebViewController controller, int progress) {},
+        onConsoleMessage: (controller, consoleMessage) {
+          print('222222222222222222222');
+          print(consoleMessage.message);
+        },
       ),
       InAppWebView(
-        initialUrlRequest:
-            URLRequest(url: Uri.parse("https://www.franko-pizza.sk/moj-ucet/")),
-        onWebViewCreated: (controller) {
+        initialUrlRequest: URLRequest(
+          url: Uri.parse("https://www.franko-pizza.sk/moj-ucet/"),
+        ),
+        onWebViewCreated: (controller) async {
           inAppWebViewController2 = controller;
         },
-        onLoadStart: (controller, url) {
+        initialOptions: options,
+        onLoadStart: (controller, url) async {
+          /*await controller.evaluateJavascript(source: """
+              var style = document.createElement('style');
+              style.innerHTML = ".qodef-mobile-header {
+                      display: none !important;
+               }
+              .qodef-page-footer.qodef-split-footer {
+                  display: none !important;
+              }";
+              document.head.appendChild(style);
+            """);*/
           setState(() {
             isLoading3 = true;
           });
@@ -96,11 +151,16 @@ class _driverwebPageState extends State<DriverWebPage> {
           });
         },
         onLoadStop: (controller, url) async {
+          await controller.injectCSSCode(
+              source:
+                  '.qodef-mobile-header {display: none;} .qodef-page-footer.qodef-split-footer {display: none;} .woocommerce-MyAccount-navigation-link {font-size: 18px;padding: 10px!important;}.woocommerce-MyAccount-navigation-link {text-transform: uppercase;font-weight: 500;}.woocommerce-MyAccount-navigation-link.is-active {font-weight: bold;background-color: #6c9640;padding: 10px 0 10px 0!important;width: 100%;}.woocommerce-MyAccount-navigation-link.woocommerce-MyAccount-navigation-link--downloads {display: none;}');
           CookieManager.instance()
               .getCookies(
             url: Uri.parse('https://www.franko-pizza.sk'),
           )
               .then((value) async {
+            SharedPreferences prefs = await SharedPreferences.getInstance();
+            //String username = prefs.getString('username') ?? '';
             if (!value.toString().contains(_username.toString())) {
               removeUserName().then((value) {
                 Navigator.pushReplacement(
@@ -113,17 +173,37 @@ class _driverwebPageState extends State<DriverWebPage> {
                 );
               });
             }
-          });
-          setState(() {
-            isLoading3 = false;
+            /*if (!value.toString().contains(_username.toString()) &&
+                username.isEmpty) {
+              removeUserName().then((value) {
+                Navigator.pushReplacement(
+                  context,
+                  CupertinoPageRoute(
+                    builder: (context) => const SignInPage(
+                      v: 1,
+                    ),
+                  ),
+                );
+              });
+            } else if (username.isNotEmpty && Platform.isIOS) {
+              List<Cookie> retrievedCookies =
+                  CookieStorage.getCookiesFromPrefs();
+              retrievedCookies.forEach((element) {
+                CookieManager.instance().setCookie(
+                  url: Uri.parse('https://www.franko-pizza.sk/moj-ucet/'),
+                  name: element.name,
+                  value: element.value,
+                );
+              });
+            }*/
           });
           setState(() {
             isLoading3 = false;
           });
         },
         onConsoleMessage: (controller, consoleMessage) {
-          print('8080808080808808');
-          print(consoleMessage);
+          print('333333333333333333333');
+          print(consoleMessage.message);
         },
       ),
     ];
@@ -136,13 +216,14 @@ class _driverwebPageState extends State<DriverWebPage> {
     prefs.setString('cart-id', id);
   }
 
-  void _onItemTapped(int index) {
+  Future<void> _onItemTapped(int index) async {
     if (index == 1) {
       CookieManager.instance()
           .getCookies(
         url: Uri.parse('https://www.franko-pizza.sk/mobile/'),
       )
           .then((value) {
+        CookieStorage.saveCookiesToPrefs(value);
         value.forEach((element) async {
           if (element.name == 'woocommerce_cart_hash') {
             SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -185,7 +266,7 @@ class _driverwebPageState extends State<DriverWebPage> {
       },
       child: Scaffold(
         body: Padding(
-          padding: const EdgeInsets.only(top: 50),
+          padding: EdgeInsets.only(top: MediaQuery.of(context).viewPadding.top),
           child: Stack(
             children: [
               IndexedStack(
@@ -206,44 +287,50 @@ class _driverwebPageState extends State<DriverWebPage> {
           ),
         ),
         bottomNavigationBar: BottomNavigationBar(
-          // type: BottomNavigationBarType.shifting,
+          // type: BottomNavigationBarType.,
           showSelectedLabels: false, //selected item
           showUnselectedLabels: false, //unselected item
           items: <BottomNavigationBarItem>[
-            BottomNavigationBarItem(
-              icon: const Icon(Icons.shopping_cart_outlined),
-              label: '',
-              activeIcon: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                      color: const Color(0xFF608736),
-                      borderRadius: BorderRadius.circular(10)),
-                  child: const Icon(
-                    Icons.shopping_cart,
-                  )),
-            ),
             BottomNavigationBarItem(
               icon: const Icon(Icons.storefront),
               label: '',
               backgroundColor: const Color(0xFF608736),
               activeIcon: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                      color: const Color(0xFF608736),
-                      borderRadius: BorderRadius.circular(10)),
-                  child: const Icon(Icons.storefront_rounded)),
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF608736),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.storefront_rounded),
+              ),
+            ),
+            BottomNavigationBarItem(
+              icon: const Icon(Icons.shopping_cart_outlined),
+              label: '',
+              activeIcon: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF608736),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.shopping_cart,
+                ),
+              ),
             ),
             BottomNavigationBarItem(
               icon: const Icon(Icons.person_2_outlined),
               label: '',
               activeIcon: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                      color: const Color(0xFF608736),
-                      borderRadius: BorderRadius.circular(10)),
-                  child: const Icon(
-                    Icons.person,
-                  )),
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF608736),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.person,
+                ),
+              ),
             ),
           ],
           currentIndex: currentPage,

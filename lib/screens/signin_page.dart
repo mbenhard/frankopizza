@@ -4,6 +4,7 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_svg_provider/flutter_svg_provider.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wp_notify/wp_notify.dart';
 
@@ -58,8 +59,9 @@ class _SignInPageState extends State<SignInPage> {
       ios: IOSInAppWebViewOptions(
         allowsInlineMediaPlayback: true,
       ));
-  Future<void> setNotification(String username) async {
+  Future<void> setCredentials(String username) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
+    Logger().e(username);
     prefs.setString('username', username);
   }
 
@@ -124,7 +126,7 @@ class _SignInPageState extends State<SignInPage> {
               }
             });
 
-            setNotification(emailController.text).then((value) {
+            setCredentials(emailController.text).then((value) {
               Navigator.push(
                 context,
                 CupertinoPageRoute(
@@ -297,72 +299,6 @@ class _SignInPageState extends State<SignInPage> {
                     ),
                   ],
                 ),
-                /*SizedBox(
-                  height: 0,
-                  child: InAppWebView(
-                    initialUrlRequest: URLRequest(
-                      url: Uri.parse("https://www.franko-pizza.sk/moj-ucet/"),
-                    ),
-                    initialOptions: options,
-                    onWebViewCreated: (controller) {
-                      webViewController = controller;
-                    },
-                    onLoadStart: (controller, url) {
-                      print(
-                          '******************* on start loading ***************');
-                    },
-                    onLoadError: (controller, url, txt, kk) {
-                      EasyLoading.dismiss();
-                    },
-                    onLoadStop: (controller, url) async {
-                      print('******************* onLoadStop ***************');
-                      CookieManager.instance()
-                          .getCookies(
-                        url: Uri.parse('https://www.franko-pizza.sk'),
-                      )
-                          .then((value) {
-                        EasyLoading.dismiss();
-                        if (emailController.text.isNotEmpty &&
-                            value.toString().contains(emailController.text)) {
-                          value.forEach((element) async {
-                            if (element.name.contains('wp_wcpt_session')) {
-                              String id = element.value.toString().substring(
-                                  0, element.value.toString().indexOf('%'));
-                              setWpConfig(id);
-                            }
-                          });
-
-                          setNotification(emailController.text).then((value) {
-                            Navigator.push(
-                              context,
-                              CupertinoPageRoute(
-                                builder: (context) => DriverWebPage(),
-                              ),
-                            );
-                            print('logged id successfull');
-                          });
-                        } else if (emailController.text.isNotEmpty &&
-                            !value.toString().contains(emailController.text)) {
-                          Fluttertoast.showToast(
-                            msg: "Login failed!",
-                            toastLength: Toast.LENGTH_SHORT,
-                            gravity: ToastGravity
-                                .BOTTOM, // You can change the gravity
-                            timeInSecForIosWeb:
-                                1, // Duration for which the toast should be visible
-                            backgroundColor: Colors.red,
-                            textColor: Colors.white,
-                            fontSize: 16.0,
-                          );
-                        }
-                      });
-                    },
-                    onConsoleMessage: (controller, consoleMessage) {
-                      print('8080808080808808');
-                      print(consoleMessage);
-                    },
-                  ),
-                )*/
               ],
             ),
           ),

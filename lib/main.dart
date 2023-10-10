@@ -28,32 +28,22 @@ Future<void> main() async {
   WPNotifyAPI.instance.initWith(baseUrl: "https://www.franko-pizza.sk");
   notification();
   configureGlobalLoader();
-  runApp(MyApp());
+  String username;
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  username = prefs.getString('username') ?? '';
+  runApp(MyApp(
+    username: username,
+  ));
 }
 
 class MyApp extends StatefulWidget {
+  MyApp({super.key, required this.username});
+  String username;
   @override
   State<MyApp> createState() => _MyAppState();
 }
 
 class _MyAppState extends State<MyApp> {
-  String _username = '';
-
-  Future<String> getUserName() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString('username') ?? '';
-  }
-
-  @override
-  void initState() {
-    getUserName().then((value) {
-      _username = value;
-      print(_username);
-    });
-
-    super.initState();
-  }
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -65,7 +55,7 @@ class _MyAppState extends State<MyApp> {
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: _username.isEmpty ? const SplashPage() : DriverWebPage(),
+      home: widget.username.isEmpty ? const SplashPage() : DriverWebPage(),
       builder: EasyLoading.init(),
     );
   }
