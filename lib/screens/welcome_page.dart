@@ -10,6 +10,7 @@ List<String> acc = <String>[
   'CREATE ACCOUNT',
   "KONTO ERSTELLEN"
 ];
+List<String> guest = <String>["PRIHLÁSIŤ BEZ ÚČTU", "GUEST LOGIN", "GAST-LOGIN"];
 
 class WelcomePage extends StatelessWidget {
   final int v;
@@ -103,6 +104,26 @@ class WelcomePage extends StatelessWidget {
                       ),
                       child: Center(
                         child: Text(acc[v], style: kButtonText),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        CupertinoPageRoute(
+                          builder: (context) => DriverWebPage(),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      height: 60,
+                      width: double.infinity,
+                      child: Center(
+                        child: Text(guest[v], style: kButtonText),
                       ),
                     ),
                   ),
