@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import 'driver_page.dart';
 import 'language_page.dart';
 
 class SplashPage extends StatefulWidget {
@@ -18,7 +19,7 @@ class _SplashScreenState extends State<SplashPage> {
       const Duration(seconds: 2),
       () => Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => languagePage()),
+        MaterialPageRoute(builder: (context) => DriverWebPage()),
       ),
     );
     super.initState();

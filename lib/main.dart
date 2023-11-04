@@ -55,7 +55,8 @@ class _MyAppState extends State<MyApp> {
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: widget.username.isEmpty ? const SplashPage() : DriverWebPage(),
+      //navigating splash page
+      home: const SplashPage(),
       builder: EasyLoading.init(),
     );
   }
