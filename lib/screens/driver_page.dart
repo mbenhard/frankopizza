@@ -1,8 +1,7 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
-import 'package:franko/screens/signin_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:wp_notify/wp_notify.dart';
 
 import '../module/cookies.dart';
 
@@ -56,6 +55,21 @@ class _driverwebPageState extends State<DriverWebPage> {
       _username = value;
       print(_username);
     });
+    Future<void> setWpConfig(String id) async {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      try {
+        WPNotifyAPI.instance.api((request) {
+          return request
+              .wpNotifyStoreToken(
+                  token: prefs.getString('fcm')!, userId: int.tryParse(id))
+              .then((value) {
+            print(value.toJson());
+          });
+        });
+      } on Exception catch (e) {
+        print(e);
+      }
+    }
 
     _pages = [
       InAppWebView(
@@ -160,8 +174,17 @@ class _driverwebPageState extends State<DriverWebPage> {
           )
               .then((value) async {
             SharedPreferences prefs = await SharedPreferences.getInstance();
+            value.forEach((element) async {
+              if (element.name.contains('wp_wcpt_session')) {
+                String id = element.value
+                    .toString()
+                    .substring(0, element.value.toString().indexOf('%'));
+                setWpConfig(id);
+              }
+            });
             //String username = prefs.getString('username') ?? '';
-            if (!value.toString().contains(_username.toString())) {
+
+            /* if (!value.toString().contains(_username.toString())) {
               removeUserName().then((value) {
                 Navigator.pushReplacement(
                   context,
@@ -170,33 +193,15 @@ class _driverwebPageState extends State<DriverWebPage> {
                       v: 1,
                     ),
                   ),
-                );
-              });
-            }
-            /*if (!value.toString().contains(_username.toString()) &&
-                username.isEmpty) {
-              removeUserName().then((value) {
-                Navigator.pushReplacement(
-                  context,
-                  CupertinoPageRoute(
-                    builder: (context) => const SignInPage(
-                      v: 1,
-                    ),
-                  ),
-                );
-              });
-            } else if (username.isNotEmpty && Platform.isIOS) {
-              List<Cookie> retrievedCookies =
-                  CookieStorage.getCookiesFromPrefs();
-              retrievedCookies.forEach((element) {
-                CookieManager.instance().setCookie(
-                  url: Uri.parse('https://www.franko-pizza.sk/moj-ucet/'),
-                  name: element.name,
-                  value: element.value,
                 );
               });
             }*/
           });
+          print('+_+_+_+__++_+_+_+_+__+_+_+_+_+___+_+_+_+_+_+_+_+_++_+_');
+          inAppWebViewController2.getTitle().then((value) {
+            print(value);
+          });
+          print('+_+_+_+__++_+_+_+_+__+_+_+_+_+___+_+_+_+_+_+_+_+_++_+_');
           setState(() {
             isLoading3 = false;
           });

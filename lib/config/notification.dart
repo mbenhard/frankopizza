@@ -11,6 +11,7 @@ void notification() async {
     description:
         'This channel is used for important notifications.', // description
     importance: Importance.high,
+    playSound: true,
   );
 
   final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin =
@@ -77,7 +78,8 @@ void notification() async {
     // If `onMessage` is triggered with a notification, construct our own
     // local notification to show to users using the created channel.
     if (notification != null && android != null) {
-      const iosNotificatonDetail = DarwinNotificationDetails();
+      const iosNotificatonDetail =
+          DarwinNotificationDetails(presentSound: true);
       _flutterLocalNotificationsPlugin.show(
         notification.hashCode,
         notification.title,
@@ -88,7 +90,7 @@ void notification() async {
             channel.name,
             channelDescription: channel.description,
             icon: android.smallIcon,
-            // other properties...
+            playSound: true,
           ),
           iOS: iosNotificatonDetail,
         ),
