@@ -175,6 +175,7 @@ class _driverwebPageState extends State<DriverWebPage> {
               .then((value) async {
             SharedPreferences prefs = await SharedPreferences.getInstance();
             value.forEach((element) async {
+              print(">>>"+element.name);
               if (element.name.contains('wp_wcpt_session')) {
                 String id = element.value
                     .toString()
